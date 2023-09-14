@@ -1,73 +1,111 @@
-import { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from "discord.js";
 import dotenv from "dotenv";
-import { DataTypes, Sequelize } from "sequelize";
-import { Axios } from "axios";
+import { Sequelize, DataTypes } from "sequelize";
+import { createCanvas, createImageData, loadImage, Canvas } from "canvas";
+import { createWriteStream } from "fs";
 
-let sequelize = new Sequelize({dialect: "sqlite", storage: "main.db"});
-
-let Player = sequelize.define("Players", {
-    ownerid: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    sex: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    props: {
-        type: DataTypes.JSON,
-        allowNull: false
-    },
-    karma: {
-        type: DataTypes.NUMBER,
-        allowNull: false
-    },
-}, {tableName: "Players"});
+let ctx = canvas.getContext("2d");
 
 dotenv.config();
 
 let client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers]});
+let sequelize = new Sequelize({storage: "main.db", dialect: "sqlite"});
+
+let Users = sequelize.define("Users", {
+    userid: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    gRupes: {
+        type: DataTypes.NUMBER,
+        allowNull: false
+    },
+
+    daily: {
+        type: DataTypes.NUMBER,
+        allowNull: false
+    },
+    
+    sRupes: {
+        type: DataTypes.JSON,
+        allowNull: false
+    },
+
+    xp: {
+        type: DataTypes.NUMBER,
+        allowNull: false
+    },
+
+    lv: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+
+    servers: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        allowNull: false
+    },
+
+    achivements: {
+        type: DataTypes.ARRAY(DataTypes.JSON)
+    },
+
+    premium: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true
+    },
+
+    vote: {
+        type: DataTypes.NUMBER
+    
+    }
+});
+
+let TdPlayers = sequelize.define("TdPlayers", {
+    userid: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+
+    towers: {
+        type: DataTypes.ARRAY(DataTypes.JSON),
+        allowNull: false
+    },
+
+    karma: {
+        type: DataTypes.NUMBER,
+        allowNull: false
+    },
+
+    rubys: {
+        type: DataTypes.NUMBER,
+        allowNull: false
+    },
+});
 
 client.on("ready", async () => {
 console.log("Started");
    let data = [
-        new SlashCommandBuilder()
-        .setName("poke")
-        .setDescription("Comandos de pokemon")
-        .addSubcommand(sub => 
+    new SlashCommandBuilder()
+        .setName("td")
+        .setDescription("Comandos de defesa de torre")
+        .addSubcommand(sub =>
             sub
-                
-                .setName("create")
-                .setDescription("Cria um novo personagem")
-                .addStringOption(op => {
+                .setName("batalhar")
+                .setDescription("Comeca uma partida de tower defense contra bots ou jogadores")
+                .addBooleanOption(op => {
                     return op
-                        .setName("sexo")
-                        .setDescription("Você é menina ou menino ? (obs isso muda muito)")
-                        .addChoices(
-                            {
-                                name: "Menino",
-                                value: "boy"
-                            },
-                            {
-                                name: "menina",
-                                value: "girl"
-                            }
-                        )
-                        .setRequired(true)
-                })
-                .addStringOption(op => {
-                    return op
-                        .setName("nome")
-                        .setDescription("hmmm qual é seu nome ?")
+                        .setName("multijogador")
+                        .setDescription("Vai jogar contra bots ou ia ?")
                         .setRequired(true)
                 })
         )
-   ]
+        .addSubcommand(sub => 
+            sub
+                .setName("loja")
+                .setDescription("Permite que você compre cartas")
+        )
+   ];
 
    let rest = new REST()
     .setToken(process.env.TOKEN);
@@ -76,80 +114,20 @@ console.log("Started");
 });
 
 client.on("interactionCreate", async (interaction) => {
-    if(interaction.isCommand() || interaction.isChatInputCommand()){
-        if(interaction.commandName == "poke"){
-            if(interaction.options.getSubcommand() === "create"){
-                try {
-                    let embed = new EmbedBuilder()
-                    .setTitle("BEM-VINDO")
-                    .setDescription("Já Já registraremos seu personagem espere...")
-                    .addFields(
-                        {
-                            name: "Dica 1",
-                            value: "Não há dicas disponiveis"
-                        }
-                    )
-                    .setImage("https://media.tenor.com/JQkWX-lI-b0AAAAd/pokemon-pikachu.gif")
-                    .setAuthor({name: interaction.user.username, iconURL: interaction.user.displayAvatarURL(), url: "https://pokeapi.co"})
-                    .setFooter({text: `By @${client.user.username}`, iconURL: client.user.displayAvatarURL()})
-                    .setColor("Yellow")
-
-                    let main = await interaction.reply({embeds: [embed]});
+    if(interaction.isCommand() || interaction.isChatInputCommand() || interaction.isButton()){
+        if(interaction.commandName == "td"){
+            if(interaction.options.getSubcommand() === "batalhar"){
+                if(!interaction.options.getBoolean("multijogador")){
+                    await ctx.drawImage(image, 0, 0)
+                    let avatar = await loadImage(interaction.user.displayAvatarURL({size: 256, extension: "jpeg"}));
                     
-                    embed = new EmbedBuilder();
-                    setTimeout(async () => {
-                        embed.setTitle("Primeiramente vamos escolher seu inicial, qual você prefere")
-                            .setDescription("Isso não irá mudar para qual ginásio você dominará primeiramente...")
-                            .setImage("https://static.guidestrats.com/images/02/13602/00-featured-choosing-starter-pokemon-in-professor-oak-lab-pokemon-frlg-screenshot.jpg")
-                            .setAuthor({name: interaction.user.username, iconURL: interaction.user.displayAvatarURL(), url: "https://pokeapi.co"})
-                            .setFooter({text: `By @${client.user.username}`, iconURL: client.user.displayAvatarURL()})
-                            .setColor("Purple")
-                        
-                            let button = new ActionRowBuilder()
-                            .addComponents(
-                                new ButtonBuilder()
-                                    .setLabel("Você escolhe o charmander de fogo ?")
-                                    .setStyle(ButtonStyle.Danger)
-                                    .setEmoji("<:Charmander:1149917027109175317>")
-                                    .setCustomId("charmander"),
-                                new ButtonBuilder()
-                                    .setStyle(ButtonStyle.Success)
-                                    .setLabel("Você escolhe o bulbasaur de planta ?")
-                                    .setEmoji("<:bulbasaur:1149917446132736000>")
-                                    .setCustomId("bulbasaur"),
-                                new ButtonBuilder()
-                                    .setLabel("Ou o squirtle de agua ?")
-                                    .setEmoji("<:squirtle:1149917430353776772>")
-                                    .setStyle(ButtonStyle.Primary)
-                                    .setCustomId("squirtle")
-                            )
-                        await main.edit({embeds: [embed], components: [button]});
-                        //let player = await Player.create({ownerid: interaction.user.id, name: interaction.options.getString("nome"), sex: interaction.options.getString("sexo"), props: {"xp": 0, "lv": 1, "yen": 100, poke: [], items: []}, karma: 0});
-                        //await player.save();
-                        let filter = i => i.user.id == interaction.user.id;
-                        const collector = interaction.channel.createMessageComponentCollector({time: 15000, filter});
-                        collector.on("collect", async (i) => {
-                            if(i.user.id != interaction.user.id) return;
-                            if(i.customId != "squirtle" && i.customId != "charmander" && i.customId != "bulbasaur") return;
-                            await i.deferUpdate();      
-                            let axios = new Axios({method: "get"});
-                            let data = await axios.get(`https://pokeapi.co/api/v2/pokemon`);
-                                                        
-                            let player = await Player.create({ownerid: interaction.user.id, name: interaction.options.getString("nome"), sex: interaction.options.getString("sexo"), props: {"xp": 0, "lv": 1, "yen": 100, poke: [{"name": i.customId, type: [data.body.types]}], items: []}, karma: 0});
-                            await player.save();
-                        });
-                    }, 5000);
-                }catch(err){ 
-                    console.log(err);
-                    await interaction.reply("Houve um erro ao criar seu personagem tente novamente...");
+                    await interaction.reply({files: [attachment]});
+                }else {
+                    await interaction.reply("Modo indisponivel");
                 }
             }
         }
-        
     }
 });
 
-(async () => {
-    await Player.sync({force: true});
-})();
 client.login(process.env.TOKEN);
