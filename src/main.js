@@ -28,7 +28,8 @@ for(let file of commandFile){
 
 client.on(Events.ClientReady, () => {
     console.log(`Started bot ${client.user.tag}`);
-});
+    client.user.setPresence({activities: [{name: "💻 | Em Ambiente desenvolvimento"}], status: "online"})
+}); 
 
 client.on("interactionCreate", (interaction) => {
     if(!interaction.isCommand() || !interaction.isChatInputCommand()) return;
@@ -41,7 +42,7 @@ client.on("interactionCreate", (interaction) => {
 });
 
 (async () => {
-    await mongoose.connect(process.env.MONGO_URL, {dbName: "MAIN"});
+    await mongoose.connect(process.env.MONGO_URL, {dbName: "main"});
 })();
 
 client.login(process.env.TOKEN);
