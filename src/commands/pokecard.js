@@ -1,14 +1,12 @@
 const { SlashCommandBuilder, Embed, EmbedBuilder } = require("discord.js");
 const { MongoClient } = require("mongodb");
-const tcg = require("@tcgdex/sdk").default;
-let dex =  new tcg("pt");
+
 const { Parse } = require("../func")
 
 
 let mongo = new MongoClient(process.env.MONGO_URL);
 let db = mongo.db("pokecard");
 let users = db.collection("users");
-let assets = db.collection("assets");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,42 +18,59 @@ module.exports = {
                 .setDescription("Diary daily card")
         ),
 
-    async execute(interaction, client){
+    async execute(interaction, client, cardData){
         await interaction.deferReply();
         if(interaction.options.getSubcommand() === "daily"){
-            
             let user = await users.findOne({id: interaction.user.id}); 
             if(!user){
-                await users.insertOne({id: interaction.user.id, dexValue: 0, yen: 0, dex: [], xp: 0, lv: 0, daily: 0, cardsSeq: 0}); // make later
+                await users.insertOne({id: interaction.user.id, dexValue: 0, yen: 0, dex: [], xp: 0, lv: 0, daily: 0}); // make later
                 user = await users.findOne({id: interaction.user.id});
             }
             let time = Parse(86400000 - (Date.now() - user.daily));
             if((time.seconds <= 0 && time.minutes <= 0 && time.hours <= 0 && time.days <= 0) || (user.daily == 0)){
-                let len = await assets.countDocuments();
-                let data = await dex.fetch("cards");
-                let cards = data[Math.floor(Math.random() * data.length)];
-                
-                let i = 1;
-                while(!cards.image){
-                    await interaction.editReply(`Buscando cartas disponiveis ${i}`);
-                    cards = data[Math.floor(Math.random() * data.length)];
-                    i++;
+                let cards = cardData[Math.floor(Math.random() * data.length)];
+                let rarities = [
+                    {name: "Amazing", value: 0.00025},
+                    {name: "Comum", value: 8},
+                    {name: "Ilustração Rara", value: 0.5},
+                    {name: "Ilustração Rara Especial", value: 0.2},
+                    {name: "Incomum", value: 5},
+                    {name: "Rara", value: 3},
+                    {name: "Rara Dupla", value: 2},
+                    {name: "Rara Hiper", value: 1},
+                    {name: "Rara Ultra", value: 0.1},
+                    {name: "Secret Rare", value: 0.0050},
+                ];
+
+
+                let soma = rarities.reduce((total, item) => total + item.valuem, 0);
+
+                let random = Math.random() * soma;
+
+                let parcial = 0;
+                let cardRare = "";
+
+                for(const rar of rarities){
+                    parcial += rar.value;
+                    if(random < parcial){
+                        cardRare = rar.name;
+                    }
                 }
 
                 let card = await dex.fetchCard(cards.id);
-                let lastOp = Math.floor(Math.random() * 2)
 
-                while((card.rarity != "Comum" && user.cardsSeq < 25) || (lastOp == 0) && (!cards.image)){
-                    cards = data[Math.floor(Math.random() * data.length)];
+                while(!card.rarity != cardRare && !card.image && card.rarity == "None"){
                     card = await dex.fetchCard(cards.id);
-                    await interaction.editReply(`Buscando cartas disponiveis ${i}`);
                 }
+
+
+                let imageUrl = card.image + "/high.png";
 
                 let embed = new EmbedBuilder();
     
                 embed.setTitle("Daily diario chegou e a carta da vez é...")
                     .setDescription(`${card.name}, Com a raridade **${card.rarity}**`)
-                    .setImage(card.image)
+                    .setImage(imageUrl)
                 
                 switch(card.rarity){
                     case "Amazing":
@@ -100,7 +115,7 @@ module.exports = {
                         break
                 }
                 await interaction.editReply({content: "", embeds: [embed]});
-                await users.updateOne({id: interaction.user.id}, {$set: {daily: Date.now()}, $push: {dex: data.id}, $inc: {cardsSeq: 1}});
+                await users.updateOne({id: interaction.user.id}, {$set: {daily: Date.now()}, $push: {dex: card.id}, $inc: {cardsSeq: 1}});
             }else {
                 let embed = new EmbedBuilder();
                 embed.setTitle("Calma meu filho...")

@@ -1,6 +1,8 @@
 const { Client, GatewayIntentBits, Collection, REST, Routes, Events } = require("discord.js");
 const { readdirSync } = require("fs");
 const dotenv = require("dotenv");
+const tcg = require("@tcgdex/sdk").default;
+let dex =  new tcg("pt");
 dotenv.config();
 
 let client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent]});
@@ -10,6 +12,10 @@ let commands = [];
 
 let commandFile = readdirSync(__dirname+"/commands/").filter(f => f.endsWith(".js"));
 
+let cardData;
+(async () => {
+    let cardData = await dex.fetch("cards");
+})();
 
 for(let file of commandFile){
     let command = require(__dirname+`/commands/${file}`);
@@ -30,6 +36,7 @@ client.on(Events.ClientReady, () => {
     client.user.setPresence({activities: [{name: "💻 | Em Ambiente desenvolvimento"}], status: "online"})
 }); 
 
+
 client.on(Events.InteractionCreate, (interaction) => {
     if(!interaction.isCommand() || !interaction.isChatInputCommand()) return;
 
@@ -37,7 +44,7 @@ client.on(Events.InteractionCreate, (interaction) => {
 
     let command = client.commands.get(name);
 
-    command.execute(interaction, client);
+    command.execute(interaction, client, cardData);
 });
 
 client.login(process.env.TOKEN);
