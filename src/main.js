@@ -30,7 +30,7 @@ client.on(Events.ClientReady, () => {
     client.user.setPresence({activities: [{name: "💻 | Em Ambiente desenvolvimento"}], status: "online"})
 }); 
 
-client.on("interactionCreate", (interaction) => {
+client.on(Events.InteractionCreate, (interaction) => {
     if(!interaction.isCommand() || !interaction.isChatInputCommand()) return;
 
     let name = interaction.commandName;
