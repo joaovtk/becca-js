@@ -33,7 +33,11 @@ for(let file of commandFile){
 
 client.on(Events.ClientReady, () => {
     console.log(`Started bot ${client.user.tag}`);
-    client.user.setPresence({activities: [{name: "💻 | Em Ambiente desenvolvimento"}], status: "online"})
+    if(process.env.STATUS == "D"){
+        client.user.setPresence({activities: [{name: "💻 | Em Ambiente desenvolvimento"}], status: "online"})
+    }else if(process.env.STATUS == "P"){
+        client.user.setPresence({activities: [{name: "Olá pessoas estou viva de novo e agora com novos comandos basta digitar / no chat para saber os meus comandos"}], status: "online"})
+    }
 }); 
 
 
