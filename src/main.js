@@ -14,7 +14,7 @@ let commandFile = readdirSync(__dirname+"/commands/").filter(f => f.endsWith(".j
 
 let cardData;
 (async () => {
-    let cardData = await dex.fetch("cards");
+    cardData = await dex.fetch("cards");
 })();
 
 for(let file of commandFile){
