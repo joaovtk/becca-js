@@ -8,10 +8,10 @@
 <h2>Funcionamento Basico de um bot do discord...</h2>
 <p>Irei separar os topicos de cada funcionamento do bot por linhas então vamos lá</p>
 <ul>
-  <li><a href="#criacao">Como que se cria um bot ?</li>
-  <li><a href="#">Quais linguagens ou bibliotecas e eu uso e porque não usar a discord.py ?</a></li>
-  <li><a href="#comandos">Como são os comandos ? </a></li>
-  <li><a href="#deploy">O maior desafio de quem é programdor: o deploy</a></li>
+  <li>Como que se cria um bot ?<a href="#criacao">Clique aqui/li>
+  <li>Quais linguagens ou bibliotecas e eu uso e porque não usar a discord.py ?<a href="#">Clique aqui</a></li>
+  <li>Como são os comandos ? <a href="#comandos">Clique aqui</a></li>
+  <li>O maior desafio de quem é programdor: o deplo<a href="#deploy"></a>Clique aqui</li>
 </ul>
 
 <h2 id="criacao">Criação de bots...</h2>
