@@ -11,7 +11,7 @@
   <li>Como que se cria um bot ? <a href="#criacao">Clique aqui</li>
   <li>Quais linguagens ou bibliotecas e eu uso e porque não usar a discord.py ? <a href="#">Clique aqui</a></li>
   <li>Como são os comandos ? <a href="#comandos">Clique aqui</a></li>
-  <li>O maior desafio de quem é programdor: o deploy <a href="#deploy"></a>Clique aqui</li>
+  <li>O maior desafio de quem é programdor: o deploy <a href="#deploy">Clique aqui</a></li>
 </ul>
 
 <h2 id="criacao">Criação de bots...</h2>
