@@ -8,7 +8,10 @@ dotenv.config();
 let client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent]});
 
 client.commands = new Collection();
+client.private = new Collection();
 let commands = [];
+let private = [];
+
 
 let commandFile = readdirSync(__dirname+"/commands/").filter(f => f.endsWith(".js"));
 
@@ -19,15 +22,24 @@ let cardData;
 
 for(let file of commandFile){
     let command = require(__dirname+`/commands/${file}`);
-    commands.push(command.data.toJSON());
 
-    client.commands.set(command.data.name, command);
+    if(command.isPrivate){
+        client.private.set(command.data.name, command);
+        private.push(command.data.toJSON());
+    }else{
+        client.commands.set(command.data.name, command);
+        commands.push(command.data.toJSON());
+    }
 }
 
 (async () => {
-    if(commands.length){
-        const rest = new REST().setToken(process.env.TOKEN);
-        await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {body: commands});
+    const rest = new REST().setToken(process.env.TOKEN);
+    if(commands.length > 0){
+        await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {body: commands});
+    }
+
+    if(private.length > 0){
+        await rest.put(Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID), {body: private});
     }
 })();
 
@@ -42,13 +54,16 @@ client.on(Events.ClientReady, () => {
 
 
 client.on(Events.InteractionCreate, (interaction) => {
-    if(!interaction.isCommand() || !interaction.isChatInputCommand()) return;
+    console.log("Test");
+    if(interaction.isCommand() || interaction.isChatInputCommand() || interaction.isModalSubmit()){   
+        let name = interaction.commandName;
 
-    let name = interaction.commandName;
+        console.log(name);
 
-    let command = client.commands.get(name);
+        let command = client.commands.get(name) || client.private.get(name);
 
-    command.execute(interaction, client, cardData);
+        command.execute(interaction, client, cardData);
+    }
 });
 
 client.login(process.env.TOKEN);
