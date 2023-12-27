@@ -5,7 +5,7 @@ const tcg = require("@tcgdex/sdk").default;
 let dex =  new tcg("pt");
 dotenv.config();
 
-let client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent]});
+let client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMembers, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.DirectMessageReactions]});
 
 client.commands = new Collection();
 client.private = new Collection();

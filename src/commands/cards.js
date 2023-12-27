@@ -1,11 +1,11 @@
 const { SlashCommandBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require("discord.js");
 const { MongoClient } = require("mongodb");
-const tcg = require("@tcgdex/sdk").default;
+const axios = require("axios").default;
 
 let mongo = new MongoClient(process.env.MONGO_URL);
 let db = mongo.db("pokecard");
 let users = db.collection("users");
-let dex =  new tcg("pt");
+let packet = db.collection("packet");
 
 module.exports = {
     data: new SlashCommandBuilder()
